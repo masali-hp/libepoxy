@@ -200,20 +200,7 @@
 #ifdef __GNUC__
 #define CONSTRUCT(_func) static void _func (void) __attribute__((constructor));
 #define DESTRUCT(_func) static void _func (void) __attribute__((destructor));
-#elif defined (_MSC_VER) && (_MSC_VER >= 1500)
-#define CONSTRUCT(_func) \
-  static void _func(void); \
-  static int _func ## _wrapper(void) { _func(); return 0; } \
-  __pragma(section(".CRT$XCU",read)) \
-  __declspec(allocate(".CRT$XCU")) static int (* _array ## _func)(void) = _func ## _wrapper;
-
-#define DESTRUCT(_func) \
-  static void _func(void); \
-  static int _func ## _constructor(void) { atexit (_func); return 0; } \
-  __pragma(section(".CRT$XCU",read)) \
-  __declspec(allocate(".CRT$XCU")) static int (* _array ## _func)(void) = _func ## _constructor;
-
-#else
+#elif !defined (_WIN32)
 #error "You will need constructor support for your compiler"
 #endif
 
@@ -272,7 +259,10 @@ static struct api api = {
 #endif
 };
 
-static bool library_initialized;
+#ifndef _WIN32
+static
+#endif
+bool library_initialized;
 
 static bool epoxy_current_context_is_glx(void);
 
@@ -281,6 +271,7 @@ static EGLenum
 epoxy_egl_get_current_gl_context_api(void);
 #endif
 
+#ifndef _WIN32
 CONSTRUCT (library_init)
 
 static void
@@ -288,6 +279,7 @@ library_init(void)
 {
     library_initialized = true;
 }
+#endif
 
 static bool
 get_dlopen_handle(void **handle, const char *lib_name, bool exit_on_fail)

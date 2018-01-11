@@ -89,6 +89,8 @@ epoxy_handle_external_wglMakeCurrent(void)
     }
 }
 
+extern bool library_initialized;
+
 /**
  * This global symbol is apparently looked up by Windows when loading
  * a DLL, but it doesn't declare the prototype.
@@ -103,6 +105,7 @@ DllMain(HINSTANCE dll, DWORD reason, LPVOID reserved)
 
     switch (reason) {
     case DLL_PROCESS_ATTACH:
+        library_initialized = true;
         gl_tls_index = TlsAlloc();
         if (gl_tls_index == TLS_OUT_OF_INDEXES)
             return FALSE;
